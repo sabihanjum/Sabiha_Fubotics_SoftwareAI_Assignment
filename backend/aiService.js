@@ -14,7 +14,7 @@ async function generateAIResponse(messages) {
   }
 
   try {
-    const modelName = process.env.GEMINI_MODEL || 'gemini-pro';
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: modelName });
 
