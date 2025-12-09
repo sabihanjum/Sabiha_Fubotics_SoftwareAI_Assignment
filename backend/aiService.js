@@ -1,47 +1,53 @@
 require('dotenv').config();
-const OpenAI = require('openai');
-
-// Initialize OpenAI client
-// This works with OpenAI, Groq, or any OpenAI-compatible API
-const openai = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.GROQ_API_BASE || undefined // Use Groq if configured, otherwise default OpenAI
-});
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
- * Generate AI response based on conversation history
+ * Generate AI response using Google Gemini
  * @param {Array} messages - Array of message objects with role and content
  * @returns {Promise<string>} - AI generated response
  */
 async function generateAIResponse(messages) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error('AI API Error: GEMINI_API_KEY is missing');
+    return 'Sorry, the AI service is not configured. Please add a Gemini API key.';
+  }
+
   try {
-    // Format messages for API (only include role and content)
-    const formattedMessages = messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: modelName });
 
-    // Call AI API
-    const completion = await openai.chat.completions.create({
-      model: process.env.GROQ_API_BASE ? 'llama-3.1-70b-versatile' : 'gpt-3.5-turbo', // Use Groq model if configured
-      messages: formattedMessages,
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    const history = messages
+      .map((m) => `${m.role === 'assistant' ? 'Assistant' : 'User'}: ${m.content}`)
+      .join('\n');
 
-    return completion.choices[0].message.content;
+    const prompt = `You are a helpful AI assistant. Continue the conversation.
+
+${history}
+
+Assistant:`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response?.text?.();
+
+    if (!text) {
+      console.error('AI API Error: Empty response from Gemini');
+      return 'Sorry, I could not generate a response. Please try again.';
+    }
+
+    return text.trim();
   } catch (error) {
     console.error('AI API Error:', error.message);
-    
-    // Return a friendly error message
-    if (error.code === 'invalid_api_key') {
+
+    if (error?.message?.toLowerCase().includes('api key')) {
       return 'Sorry, the AI service is not properly configured. Please check the API key.';
     }
-    
+
     return 'Sorry, I encountered an error. Please try again.';
   }
 }
 
 module.exports = {
-  generateAIResponse
+  generateAIResponse,
 };
