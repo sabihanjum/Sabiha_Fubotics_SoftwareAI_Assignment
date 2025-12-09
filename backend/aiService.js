@@ -39,12 +39,14 @@ Assistant:`;
     return text.trim();
   } catch (error) {
     console.error('AI API Error:', error.message);
+    console.error('Full error:', error);
 
     if (error?.message?.toLowerCase().includes('api key')) {
-      return 'Sorry, the AI service is not properly configured. Please check the API key.';
+      return `Error: API key issue - ${error.message}`;
     }
 
-    return 'Sorry, I encountered an error. Please try again.';
+    // Return detailed error for debugging
+    return `Error: ${error.message || 'Unknown error occurred'}`;
   }
 }
 
