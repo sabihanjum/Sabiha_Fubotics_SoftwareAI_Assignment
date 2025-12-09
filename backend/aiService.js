@@ -14,7 +14,9 @@ async function generateAIResponse(messages) {
   }
 
   try {
-    const modelName = process.env.GEMINI_MODEL || 'models/gemini-1.5-flash';
+    // ✅ correct default model name (no "models/" prefix, and use latest)
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -45,7 +47,6 @@ Assistant:`;
       return `Error: API key issue - ${error.message}`;
     }
 
-    // Return detailed error for debugging
     return `Error: ${error.message || 'Unknown error occurred'}`;
   }
 }
